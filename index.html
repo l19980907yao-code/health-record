@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>健康檢查填報</title>
+
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", Arial, sans-serif; padding: 20px; line-height: 1.5; }
+    .card { max-width: 720px; border: 1px solid #ddd; border-radius: 12px; padding: 18px; }
+    label { display: block; margin-top: 14px; font-weight: 600; }
+    input, select { margin-top: 8px; padding: 10px; border-radius: 10px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+    .hint { color: #666; font-size: 13px; margin-top: 6px; }
+    button { margin-top: 18px; padding: 12px 14px; border-radius: 12px; border: 0; cursor: pointer; width: 100%; font-size: 16px; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    #message { margin-top: 14px; font-weight: 700; }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2>健康檢查資料填報</h2>
+    <p class="hint">請依序填寫：姓名、單位、出生月份、體檢日期、級數、回診日期（可空）。</p>
+
+    <form id="health-form">
+      <label for="name">姓名</label>
+      <input id="name" type="text" placeholder="請輸入姓名" required />
+
+      <label for="unit">單位</label>
+      <select id="unit" required>
+        <option value="">請選擇單位</option>
+        <option value="艦隊部">艦隊部</option>
+        <option value="武夷軍艦">武夷軍艦</option>
+        <option value="玉山軍艦">玉山軍艦</option>
+        <option value="旭海軍艦">旭海軍艦</option>
+        <option value="磐石軍艦">磐石軍艦</option>
+        <option value="中和軍艦">中和軍艦</option>
+        <option value="中平軍艦">中平軍艦</option>
+        <option value="中業軍艦">中業軍艦</option>
+        <option value="中建軍艦">中建軍艦</option>
+        <option value="登陸艇大隊">登陸艇大隊</option>
+        <option value="高雄軍艦">高雄軍艦</option>
+      </select>
+
+      <label for="birth_month">出生月份</label>
+      <select id="birth_month" required>
+        <option value="">請選擇月份</option>
+        <option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option><option value="4">4 月</option>
+        <option value="5">5 月</option><option value="6">6 月</option><option value="7">7 月</option><option value="8">8 月</option>
+        <option value="9">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12">12 月</option>
+      </select>
+
+      <label>體檢日期（年 / 月 / 日）</label>
+      <div class="row">
+        <div>
+          <select id="checkup_year" required></select>
+        </div>
+        <div>
+          <select id="checkup_month" required></select>
+        </div>
+        <div>
+          <select id="checkup_day" required></select>
+        </div>
+      </div>
+
+      <label for="result_level">體檢級數</label>
+      <select id="result_level" required>
+        <option value="">請選擇</option>
+        <option value="2">2 級</option>
+        <option value="3">3 級</option>
+      </select>
+
+      <label>回診日期（年 / 月 / 日）</label>
+      <div class="row">
+        <div>
+          <select id="followup_year"></select>
+        </div>
+        <div>
+          <select id="followup_month"></select>
+        </div>
+        <div>
+          <select id="followup_day"></select>
+        </div>
+      </div>
+      <div class="hint">回診日期可不填；若不填請保持「年／月／日」皆為空。</div>
+
+      <button id="submitBtn" type="submit">送出</button>
+      <div id="message"></div>
+    </form>
+  </div>
+
+  <script>
+    // ===== 1) 填入你的 Supabase 設定（必改） =====
+    const SUPABASE_URL = "https://pvmvcaelkizcbutykkwq.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2bXZjYWVsa2l6Y2J1dHlra3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODgzNTYsImV4cCI6MjA4NDQ2NDM1Nn0.nmGwM6UroI4mZEMy7UaQWkRRZo4SoNRAlcYJf0BYrRo";
+
+    // 你在 Supabase 建的表名（預設照我上面的 SQL）
+    const TABLE_NAME = "health_records";
+
+    // ===== 2) 建立 Supabase client =====
+    const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ===== 3) 日期下拉選單工具 =====
+    function pad2(n) { return String(n).padStart(2, "0"); }
+
+    function daysInMonth(year, month) {
+      // month: 1-12
+      return new Date(year, month, 0).getDate();
+    }
+
+    function fillMonthOptions(selectEl, placeholder) {
+      selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+      for (let m = 1; m <= 12; m++) {
+        const opt = document.createElement("option");
+        opt.value = String(m);
+        opt.textContent = `${m} 月`;
+        selectEl.appendChild(opt);
+      }
+    }
+
+    function fillYearOptions(selectEl, placeholder, startYear, endYear, includeEmpty) {
+      // includeEmpty: true => allow blank (for followup date)
+      selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+      for (let y = endYear; y >= startYear; y--) {
+        const opt = document.createElement("option");
+        opt.value = String(y);
+        opt.textContent = `${y} 年`;
+        selectEl.appendChild(opt);
+      }
+      if (!includeEmpty) {
+        // required 用：不做額外處理，因為第一個 option 已是空值
+      }
+    }
+
+    function fillDayOptions(selectEl, placeholder, year, month, includeEmpty) {
+      selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+      if (!year || !month) return;
+
+      const maxDay = daysInMonth(parseInt(year, 10), parseInt(month, 10));
+      for (let d = 1; d <= maxDay; d++) {
+        const opt = document.createElement("option");
+        opt.value = String(d);
+        opt.textContent = `${d} 日`;
+        selectEl.appendChild(opt);
+      }
+    }
+
+    function bindDateSelectors(prefix, required) {
+      const y = document.getElementById(`${prefix}_year`);
+      const m = document.getElementById(`${prefix}_month`);
+      const d = document.getElementById(`${prefix}_day`);
+
+      const now = new Date();
+      const endYear = now.getFullYear();
+      const startYear = endYear - 10; // 近 10 年，覺得不夠你可改成 -20
+
+      fillYearOptions(y, "年", startYear, endYear, !required);
+      fillMonthOptions(m, "月");
+      fillDayOptions(d, "日", null, null, !required);
+
+      function refreshDays() {
+        const prev = d.value;
+        fillDayOptions(d, "日", y.value, m.value, !required);
+        // 盡量保留原本選的日
+        if (prev) {
+          const maxDay = daysInMonth(parseInt(y.value || "0", 10), parseInt(m.value || "0", 10));
+          if (parseInt(prev, 10) <= maxDay) d.value = prev;
+        }
+      }
+
+      y.addEventListener("change", refreshDays);
+      m.addEventListener("change", refreshDays);
+
+      return { y, m, d };
+    }
+
+    function buildDateOrNull(y, m, d, required) {
+      // required：true => 必須都有值；false => 全空允許回傳 null
+      const yy = y.value, mm = m.value, dd = d.value;
+
+      if (!required) {
+        // 回診日期：要嘛全空 = null；要嘛三個都有值
+        const allEmpty = !yy && !mm && !dd;
+        const allFilled = !!yy && !!mm && !!dd;
+        if (allEmpty) return null;
+        if (!allFilled) return { error: "回診日期請選完整的年/月/日，或全部留空。" };
+      } else {
+        if (!yy || !mm || !dd) return { error: "體檢日期請選完整的年/月/日。" };
+      }
+
+      const dateStr = `${yy}-${pad2(mm)}-${pad2(dd)}`;
+      return dateStr;
+    }
+
+    // 初始化兩組日期下拉
+    const checkup = bindDateSelectors("checkup", true);
+    const followup = bindDateSelectors("followup", false);
+
+    // ===== 4) 表單送出：寫入 Supabase =====
+    const form = document.getElementById("health-form");
+    const msg = document.getElementById("message");
+    const submitBtn = document.getElementById("submitBtn");
+
+    function setMsg(text, ok) {
+      msg.textContent = text;
+      msg.style.color = ok ? "green" : "red";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setMsg("", true);
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "送出中…";
+
+      try {
+        const name = document.getElementById("name").value.trim();
+        const unit = document.getElementById("unit").value;
+        const birthMonth = document.getElementById("birth_month").value;
+        const resultLevel = document.getElementById("result_level").value;
+
+        if (!name) {
+          setMsg("姓名不可空白。", false);
+          return;
+        }
+
+        const checkupDate = buildDateOrNull(checkup.y, checkup.m, checkup.d, true);
+        if (checkupDate && typeof checkupDate === "object" && checkupDate.error) {
+          setMsg(checkupDate.error, false);
+          return;
+        }
+
+        const followupDate = buildDateOrNull(followup.y, followup.m, followup.d, false);
+        if (followupDate && typeof followupDate === "object" && followupDate.error) {
+          setMsg(followupDate.error, false);
+          return;
+        }
+
+        // 寫入資料
+        const payload = {
+          name,
+          unit,
+          birth_month: parseInt(birthMonth, 10),
+          checkup_date: checkupDate,
+          result_level: parseInt(resultLevel, 10),
+          followup_date: followupDate // null 或 YYYY-MM-DD
+        };
+
+        const { error } = await supabase
+          .from(TABLE_NAME)
+          .insert([payload]);
+
+        if (error) {
+          setMsg("送出失敗：" + error.message, false);
+        } else {
+          setMsg("送出成功！", true);
+          form.reset();
+
+          // reset 後日期下拉的 day 也要重建一次
+          document.getElementById("checkup_day").innerHTML = '<option value="">日</option>';
+          document.getElementById("followup_day").innerHTML = '<option value="">日</option>';
+        }
+      } catch (err) {
+        setMsg("送出失敗（例外）：" + (err?.message || String(err)), false);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "送出";
+      }
+    });
+  </script>
+</body>
+</html>
