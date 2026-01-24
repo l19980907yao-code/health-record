@@ -185,8 +185,8 @@
 
 <script>
 /* ===== Supabase 設定（一定要改） ===== */
-const SUPABASE_URL = "https://xxxx.supabase.co";
-const SUPABASE_ANON_KEY = "你的 anon public key";
+const SUPABASE_URL = "https://pvmvcaelkizcbutykkwq.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2bXZjYWVsa2l6Y2J1dHlra3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODgzNTYsImV4cCI6MjA4NDQ2NDM1Nn0.nmGwM6UroI4mZEMy7UaQWkRRZo4SoNRAlcYJf0BYrRo";
 const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ===== 日期下拉初始化 ===== */
@@ -264,6 +264,52 @@ document.getElementById("health-form").addEventListener("submit", async e => {
     e.target.reset();
   }
 });
+
+  function daysInMonth(year, month) {
+    return new Date(year, month, 0).getDate(); // month: 1-12
+  }
+
+  function rebuildDays(yearSelId, monthSelId, daySelId, placeholderText) {
+    const y = document.getElementById(yearSelId);
+    const m = document.getElementById(monthSelId);
+    const d = document.getElementById(daySelId);
+
+    const yy = parseInt(y.value, 10);
+    const mm = parseInt(m.value, 10);
+
+    const prev = d.value;
+    d.innerHTML = `<option value="">${placeholderText}</option>`;
+
+    if (!yy || !mm) return;
+
+    const maxDay = daysInMonth(yy, mm);
+    for (let i = 1; i <= maxDay; i++) {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = `${i} 日`;
+      d.appendChild(opt);
+    }
+
+    // 盡量保留原本選過的日
+    if (prev && parseInt(prev, 10) <= maxDay) d.value = prev;
+  }
+
+  // 體檢日期：年/月變動就重建日
+  document.getElementById("checkup_year").addEventListener("change", () =>
+    rebuildDays("checkup_year", "checkup_month", "checkup_day", "日")
+  );
+  document.getElementById("checkup_month").addEventListener("change", () =>
+    rebuildDays("checkup_year", "checkup_month", "checkup_day", "日")
+  );
+
+  // 回診日期：年/月變動就重建日
+  document.getElementById("followup_year").addEventListener("change", () =>
+    rebuildDays("followup_year", "followup_month", "followup_day", "日（可不填）")
+  );
+  document.getElementById("followup_month").addEventListener("change", () =>
+    rebuildDays("followup_year", "followup_month", "followup_day", "日（可不填）")
+  );
+
 </script>
 </body>
 </html>
