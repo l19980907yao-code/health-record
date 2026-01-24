@@ -99,12 +99,40 @@
     </select>
 
     <!-- 體檢日期 -->
-    <label>體檢日期</label>
-    <div class="row">
-      <div><select id="checkup_year" required></select></div>
-      <div><select id="checkup_month" required></select></div>
-      <div><select id="checkup_day" required><option value="">日</option></select></div>
-    </div>
+    <label>體檢日期（年 / 月 / 日）</label>
+<div class="row">
+  <div>
+    <select id="checkup_year" required>
+      <option value="">年</option>
+      <option value="2026">2026 年</option>
+      <option value="2025">2025 年</option>
+      <option value="2024">2024 年</option>
+      <option value="2023">2023 年</option>
+      <option value="2022">2022 年</option>
+      <option value="2021">2021 年</option>
+      <option value="2020">2020 年</option>
+      <option value="2019">2019 年</option>
+      <option value="2018">2018 年</option>
+      <option value="2017">2017 年</option>
+      <option value="2016">2016 年</option>
+    </select>
+  </div>
+
+  <div>
+    <select id="checkup_month" required>
+      <option value="">月</option>
+      <option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option><option value="4">4 月</option>
+      <option value="5">5 月</option><option value="6">6 月</option><option value="7">7 月</option><option value="8">8 月</option>
+      <option value="9">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12">12 月</option>
+    </select>
+  </div>
+
+  <div>
+    <select id="checkup_day" required>
+      <option value="">日</option>
+    </select>
+  </div>
+</div>
 
     <label>體檢級數</label>
     <select id="result_level" required>
@@ -114,12 +142,41 @@
     </select>
 
     <!-- 回診日期 -->
-    <label>回診日期（可不填）</label>
-    <div class="row">
-      <div><select id="followup_year"></select></div>
-      <div><select id="followup_month"></select></div>
-      <div><select id="followup_day"><option value="">日</option></select></div>
-    </div>
+    <label>回診日期（年 / 月 / 日）</label>
+<div class="row">
+  <div>
+    <select id="followup_year">
+      <option value="">年（可不填）</option>
+      <option value="2026">2026 年</option>
+      <option value="2025">2025 年</option>
+      <option value="2024">2024 年</option>
+      <option value="2023">2023 年</option>
+      <option value="2022">2022 年</option>
+      <option value="2021">2021 年</option>
+      <option value="2020">2020 年</option>
+      <option value="2019">2019 年</option>
+      <option value="2018">2018 年</option>
+      <option value="2017">2017 年</option>
+      <option value="2016">2016 年</option>
+    </select>
+  </div>
+
+  <div>
+    <select id="followup_month">
+      <option value="">月（可不填）</option>
+      <option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option><option value="4">4 月</option>
+      <option value="5">5 月</option><option value="6">6 月</option><option value="7">7 月</option><option value="8">8 月</option>
+      <option value="9">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12">12 月</option>
+    </select>
+  </div>
+
+  <div>
+    <select id="followup_day">
+      <option value="">日（可不填）</option>
+    </select>
+  </div>
+</div>
+<div class="hint">回診日期可留空；若要填，請選完整年/月/日。</div>
 
     <button type="submit">送出</button>
     <div id="message"></div>
@@ -128,8 +185,8 @@
 
 <script>
 /* ===== Supabase 設定（一定要改） ===== */
-const SUPABASE_URL = "https://pvmvcaelkizcbutykkwq.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2bXZjYWVsa2l6Y2J1dHlra3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODgzNTYsImV4cCI6MjA4NDQ2NDM1Nn0.nmGwM6UroI4mZEMy7UaQWkRRZo4SoNRAlcYJf0BYrRo";
+const SUPABASE_URL = "https://xxxx.supabase.co";
+const SUPABASE_ANON_KEY = "你的 anon public key";
 const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ===== 日期下拉初始化 ===== */
