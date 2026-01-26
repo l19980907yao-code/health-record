@@ -182,7 +182,7 @@
 </div>
 
 <script>
-  // ===== 日期工具（先放最前面，避免被 Supabase 報錯影響）=====
+  // ===== 日期（日）下拉 =====
   function daysInMonth(year, month) {
     return new Date(year, month, 0).getDate();
   }
@@ -209,39 +209,55 @@
   }
 
   function initDateBindings() {
-    const cy = document.getElementById("checkup_year");
-    const cm = document.getElementById("checkup_month");
-    const fy = document.getElementById("followup_year");
-    const fm = document.getElementById("followup_month");
-
-    if (cy) cy.addEventListener("change", () => rebuildDays("checkup_year","checkup_month","checkup_day"));
-    if (cm) cm.addEventListener("change", () => rebuildDays("checkup_year","checkup_month","checkup_day"));
-    if (fy) fy.addEventListener("change", () => rebuildDays("followup_year","followup_month","followup_day"));
-    if (fm) fm.addEventListener("change", () => rebuildDays("followup_year","followup_month","followup_day"));
+    document.getElementById("checkup_year")?.addEventListener("change", () =>
+      rebuildDays("checkup_year","checkup_month","checkup_day")
+    );
+    document.getElementById("checkup_month")?.addEventListener("change", () =>
+      rebuildDays("checkup_year","checkup_month","checkup_day")
+    );
+    document.getElementById("followup_year")?.addEventListener("change", () =>
+      rebuildDays("followup_year","followup_month","followup_day")
+    );
+    document.getElementById("followup_month")?.addEventListener("change", () =>
+      rebuildDays("followup_year","followup_month","followup_day")
+    );
   }
 
-  // ✅ 不管 DOMContentLoaded 有沒有錯過，都保證會初始化
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initDateBindings);
   } else {
     initDateBindings();
   }
 
-  // ===== Supabase 設定（用 window.supabase，比 supabaseJs 穩）=====
+  // ===== Supabase 初始化（CDN 最穩：window.supabase）=====
   const SUPABASE_URL = "https://pvmvcaelkizcbutykkwq.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2bXZjYWVsa2l6Y2J1dHlra3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODgzNTYsImV4cCI6MjA4NDQ2NDM1Nn0.nmGwM6UroI4mZEMy7UaQWkRRZo4SoNRAlcYJf0BYrRo";
-
   let supabaseClient = null;
-  if (window.supabase && typeof window.supabase.createClient === "function") {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  } else {
-    console.warn("Supabase SDK 未載入成功（但日期功能仍可用）");
+  try {
+    if (window.supabase?.createClient) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else {
+      console.warn("Supabase SDK 未載入（window.supabase 不存在）");
+    }
+  } catch (e) {
+    console.error("Supabase init error:", e);
   }
 
   // ===== 表單送出 =====
-  document.getElementById("health-form").addEventListener("submit", async (e) => {
+  const form = document.getElementById("health-form");
+  const msg = document.getElementById("message");
+
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const msg = document.getElementById("message");
+    msg.textContent = "";
+    msg.style.color = "black";
+
+    // 這裡加一個「必填檢查」，讓你知道到底缺什麼
+    if (!name.value.trim()) return showErr("請輸入姓名");
+    if (!unit.value) return showErr("請選擇單位");
+    if (!birth_month.value) return showErr("請選擇出生月份");
+    if (!checkup_year.value || !checkup_month.value || !checkup_day.value) return showErr("請選完整的體檢日期（年/月/日）");
+    if (!result_level.value) return showErr("請選擇體檢級數");
 
     const checkup_date =
       `${checkup_year.value}-${String(checkup_month.value).padStart(2,"0")}-${String(checkup_day.value).padStart(2,"0")}`;
@@ -251,34 +267,40 @@
         ? `${followup_year.value}-${String(followup_month.value).padStart(2,"0")}-${String(followup_day.value).padStart(2,"0")}`
         : null;
 
-    if (!supabaseClient) {
-      msg.textContent = "送出失敗：Supabase SDK 未初始化（請檢查網路或 SDK 載入）";
-      msg.style.color = "red";
-      return;
-    }
+    if (!supabaseClient) return showErr("Supabase 尚未初始化（請檢查 SDK 載入或 Key）");
 
-    const { error } = await supabaseClient
-      .from("health_records")
-      .insert([{
-        name: name.value.trim(),
-        unit: unit.value,
-        birth_month: parseInt(birth_month.value, 10),
-        checkup_date,
-        result_level: parseInt(result_level.value, 10),
-        followup_date
-      }]);
+    const payload = {
+      name: name.value.trim(),
+      unit: unit.value,
+      birth_month: parseInt(birth_month.value, 10),
+      checkup_date,
+      result_level: parseInt(result_level.value, 10),
+      followup_date
+    };
 
-    if (error) {
-      msg.textContent = "送出失敗：" + error.message;
-      msg.style.color = "red";
-    } else {
+    try {
+      const result = await supabaseClient.from("health_records").insert([payload]);
+      console.log("insert result:", result);
+
+      if (result.error) {
+        return showErr("送出失敗：" + result.error.message);
+      }
+
       msg.textContent = "送出成功！";
       msg.style.color = "green";
-      e.target.reset();
+      form.reset();
       document.getElementById("checkup_day").innerHTML = `<option value="">日</option>`;
       document.getElementById("followup_day").innerHTML = `<option value="">日</option>`;
+    } catch (err) {
+      console.error(err);
+      showErr("送出失敗（例外）：" + (err?.message || String(err)));
     }
   });
+
+  function showErr(t) {
+    msg.textContent = t;
+    msg.style.color = "red";
+  }
 </script>
 </body>
 </html>
