@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>健康檢查填報</title>
+  <title>體檢回診管理</title>
 
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -64,7 +64,7 @@
 
 <body>
 <div class="card">
-  <h2>健康檢查資料填報</h2>
+  <h2>體檢回診管理</h2>
   <p class="hint">請完整填寫以下資料，回診日期可留空。</p>
 
   <form id="health-form">
@@ -182,70 +182,103 @@
 </div>
 
 <script>
-/* ===== Supabase 設定 ===== */
-const SUPABASE_URL = "https://pvmvcaelkizcbutykkwq.supabase.co";
-const SUPABASE_ANON_KEY = "（保留你原本的 anon key）";
-const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-/* ===== 日期工具 ===== */
-function daysInMonth(year, month) {
-  return new Date(year, month, 0).getDate();
-}
-function rebuildDays(yearId, monthId, dayId) {
-  const y = document.getElementById(yearId).value;
-  const m = document.getElementById(monthId).value;
-  const d = document.getElementById(dayId);
-  d.innerHTML = `<option value="">日</option>`;
-  if (!y || !m) return;
-  const max = daysInMonth(y, m);
-  for (let i = 1; i <= max; i++) {
-    d.innerHTML += `<option value="${i}">${i}</option>`;
+  // ===== 日期工具（先放最前面，避免被 Supabase 報錯影響）=====
+  function daysInMonth(year, month) {
+    return new Date(year, month, 0).getDate();
   }
-}
 
-/* 綁定日期事件 */
-["checkup_year","checkup_month"].forEach(id =>
-  document.getElementById(id).addEventListener("change",
-    () => rebuildDays("checkup_year","checkup_month","checkup_day"))
-);
-["followup_year","followup_month"].forEach(id =>
-  document.getElementById(id).addEventListener("change",
-    () => rebuildDays("followup_year","followup_month","followup_day"))
-);
+  function rebuildDays(yearId, monthId, dayId) {
+    const yEl = document.getElementById(yearId);
+    const mEl = document.getElementById(monthId);
+    const dEl = document.getElementById(dayId);
+    if (!yEl || !mEl || !dEl) return;
 
-/* ===== 表單送出 ===== */
-document.getElementById("health-form").addEventListener("submit", async e => {
-  e.preventDefault();
-  const msg = document.getElementById("message");
+    const yy = parseInt(yEl.value, 10);
+    const mm = parseInt(mEl.value, 10);
 
-  const checkup_date =
-    `${checkup_year.value}-${String(checkup_month.value).padStart(2,"0")}-${String(checkup_day.value).padStart(2,"0")}`;
+    dEl.innerHTML = `<option value="">日</option>`;
+    if (!yy || !mm) return;
 
-  const followup_date =
-    (followup_year.value && followup_month.value && followup_day.value)
-      ? `${followup_year.value}-${String(followup_month.value).padStart(2,"0")}-${String(followup_day.value).padStart(2,"0")}`
-      : null;
+    const max = daysInMonth(yy, mm);
+    for (let i = 1; i <= max; i++) {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = String(i);
+      dEl.appendChild(opt);
+    }
+  }
 
-  const { error } = await supabase
-    .from("health_records")
-    .insert([{
-      name: name.value.trim(),
-      unit: unit.value,
-      birth_month: parseInt(birth_month.value),
-      checkup_date,
-      result_level: parseInt(result_level.value),
-      followup_date
-    }]);
+  function initDateBindings() {
+    const cy = document.getElementById("checkup_year");
+    const cm = document.getElementById("checkup_month");
+    const fy = document.getElementById("followup_year");
+    const fm = document.getElementById("followup_month");
 
-  if (error) {
-    msg.textContent = "送出失敗：" + error.message;
-    msg.style.color = "red";
+    if (cy) cy.addEventListener("change", () => rebuildDays("checkup_year","checkup_month","checkup_day"));
+    if (cm) cm.addEventListener("change", () => rebuildDays("checkup_year","checkup_month","checkup_day"));
+    if (fy) fy.addEventListener("change", () => rebuildDays("followup_year","followup_month","followup_day"));
+    if (fm) fm.addEventListener("change", () => rebuildDays("followup_year","followup_month","followup_day"));
+  }
+
+  // ✅ 不管 DOMContentLoaded 有沒有錯過，都保證會初始化
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initDateBindings);
   } else {
-    msg.textContent = "送出成功！";
-    msg.style.color = "green";
-    e.target.reset();
+    initDateBindings();
   }
-});
+
+  // ===== Supabase 設定（用 window.supabase，比 supabaseJs 穩）=====
+  const SUPABASE_URL = "https://pvmvcaelkizcbutykkwq.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2bXZjYWVsa2l6Y2J1dHlra3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODgzNTYsImV4cCI6MjA4NDQ2NDM1Nn0.nmGwM6UroI4mZEMy7UaQWkRRZo4SoNRAlcYJf0BYrRo";
+
+  let supabaseClient = null;
+  if (window.supabase && typeof window.supabase.createClient === "function") {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } else {
+    console.warn("Supabase SDK 未載入成功（但日期功能仍可用）");
+  }
+
+  // ===== 表單送出 =====
+  document.getElementById("health-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById("message");
+
+    const checkup_date =
+      `${checkup_year.value}-${String(checkup_month.value).padStart(2,"0")}-${String(checkup_day.value).padStart(2,"0")}`;
+
+    const followup_date =
+      (followup_year.value && followup_month.value && followup_day.value)
+        ? `${followup_year.value}-${String(followup_month.value).padStart(2,"0")}-${String(followup_day.value).padStart(2,"0")}`
+        : null;
+
+    if (!supabaseClient) {
+      msg.textContent = "送出失敗：Supabase SDK 未初始化（請檢查網路或 SDK 載入）";
+      msg.style.color = "red";
+      return;
+    }
+
+    const { error } = await supabaseClient
+      .from("health_records")
+      .insert([{
+        name: name.value.trim(),
+        unit: unit.value,
+        birth_month: parseInt(birth_month.value, 10),
+        checkup_date,
+        result_level: parseInt(result_level.value, 10),
+        followup_date
+      }]);
+
+    if (error) {
+      msg.textContent = "送出失敗：" + error.message;
+      msg.style.color = "red";
+    } else {
+      msg.textContent = "送出成功！";
+      msg.style.color = "green";
+      e.target.reset();
+      document.getElementById("checkup_day").innerHTML = `<option value="">日</option>`;
+      document.getElementById("followup_day").innerHTML = `<option value="">日</option>`;
+    }
+  });
 </script>
 </body>
 </html>
