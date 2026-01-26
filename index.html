@@ -91,48 +91,48 @@
     <label>出生月份</label>
     <select id="birth_month" required>
       <option value="">請選擇</option>
-      <script>
-        for (let i = 1; i <= 12; i++) {
-          document.write(`<option value="${i}">${i} 月</option>`);
-        }
-      </script>
+      <option value="1">1 月</option><option value="2">2 月</option>
+      <option value="3">3 月</option><option value="4">4 月</option>
+      <option value="5">5 月</option><option value="6">6 月</option>
+      <option value="7">7 月</option><option value="8">8 月</option>
+      <option value="9">9 月</option><option value="10">10 月</option>
+      <option value="11">11 月</option><option value="12">12 月</option>
     </select>
 
     <!-- 體檢日期 -->
     <label>體檢日期（年 / 月 / 日）</label>
-<div class="row">
-  <div>
-    <select id="checkup_year" required>
-      <option value="">年</option>
-      <option value="2026">2026 年</option>
-      <option value="2025">2025 年</option>
-      <option value="2024">2024 年</option>
-      <option value="2023">2023 年</option>
-      <option value="2022">2022 年</option>
-      <option value="2021">2021 年</option>
-      <option value="2020">2020 年</option>
-      <option value="2019">2019 年</option>
-      <option value="2018">2018 年</option>
-      <option value="2017">2017 年</option>
-      <option value="2016">2016 年</option>
-    </select>
-  </div>
-
-  <div>
-    <select id="checkup_month" required>
-      <option value="">月</option>
-      <option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option><option value="4">4 月</option>
-      <option value="5">5 月</option><option value="6">6 月</option><option value="7">7 月</option><option value="8">8 月</option>
-      <option value="9">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12">12 月</option>
-    </select>
-  </div>
-
-  <div>
-    <select id="checkup_day" required>
-      <option value="">日</option>
-    </select>
-  </div>
-</div>
+    <div class="row">
+      <div>
+        <select id="checkup_year" required>
+          <option value="">年</option>
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="2022">2022</option>
+          <option value="2021">2021</option>
+          <option value="2020">2020</option>
+          <option value="2019">2019</option>
+          <option value="2018">2018</option>
+        </select>
+      </div>
+      <div>
+        <select id="checkup_month" required>
+          <option value="">月</option>
+          <option value="1">1</option><option value="2">2</option>
+          <option value="3">3</option><option value="4">4</option>
+          <option value="5">5</option><option value="6">6</option>
+          <option value="7">7</option><option value="8">8</option>
+          <option value="9">9</option><option value="10">10</option>
+          <option value="11">11</option><option value="12">12</option>
+        </select>
+      </div>
+      <div>
+        <select id="checkup_day" required>
+          <option value="">日</option>
+        </select>
+      </div>
+    </div>
 
     <label>體檢級數</label>
     <select id="result_level" required>
@@ -142,41 +142,39 @@
     </select>
 
     <!-- 回診日期 -->
-    <label>回診日期（年 / 月 / 日）</label>
-<div class="row">
-  <div>
-    <select id="followup_year">
-      <option value="">年（可不填）</option>
-      <option value="2026">2026 年</option>
-      <option value="2025">2025 年</option>
-      <option value="2024">2024 年</option>
-      <option value="2023">2023 年</option>
-      <option value="2022">2022 年</option>
-      <option value="2021">2021 年</option>
-      <option value="2020">2020 年</option>
-      <option value="2019">2019 年</option>
-      <option value="2018">2018 年</option>
-      <option value="2017">2017 年</option>
-      <option value="2016">2016 年</option>
-    </select>
-  </div>
-
-  <div>
-    <select id="followup_month">
-      <option value="">月（可不填）</option>
-      <option value="1">1 月</option><option value="2">2 月</option><option value="3">3 月</option><option value="4">4 月</option>
-      <option value="5">5 月</option><option value="6">6 月</option><option value="7">7 月</option><option value="8">8 月</option>
-      <option value="9">9 月</option><option value="10">10 月</option><option value="11">11 月</option><option value="12">12 月</option>
-    </select>
-  </div>
-
-  <div>
-    <select id="followup_day">
-      <option value="">日（可不填）</option>
-    </select>
-  </div>
-</div>
-<div class="hint">回診日期可留空；若要填，請選完整年/月/日。</div>
+    <label>回診日期（年 / 月 / 日，可不填）</label>
+    <div class="row">
+      <div>
+        <select id="followup_year">
+          <option value="">年</option>
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="2022">2022</option>
+          <option value="2021">2021</option>
+          <option value="2020">2020</option>
+          <option value="2019">2019</option>
+          <option value="2018">2018</option>
+        </select>
+      </div>
+      <div>
+        <select id="followup_month">
+          <option value="">月</option>
+          <option value="1">1</option><option value="2">2</option>
+          <option value="3">3</option><option value="4">4</option>
+          <option value="5">5</option><option value="6">6</option>
+          <option value="7">7</option><option value="8">8</option>
+          <option value="9">9</option><option value="10">10</option>
+          <option value="11">11</option><option value="12">12</option>
+        </select>
+      </div>
+      <div>
+        <select id="followup_day">
+          <option value="">日</option>
+        </select>
+      </div>
+    </div>
 
     <button type="submit">送出</button>
     <div id="message"></div>
@@ -184,44 +182,28 @@
 </div>
 
 <script>
-/* ===== Supabase 設定（一定要改） ===== */
+/* ===== Supabase 設定 ===== */
 const SUPABASE_URL = "https://pvmvcaelkizcbutykkwq.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2bXZjYWVsa2l6Y2J1dHlra3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODgzNTYsImV4cCI6MjA4NDQ2NDM1Nn0.nmGwM6UroI4mZEMy7UaQWkRRZo4SoNRAlcYJf0BYrRo";
+const SUPABASE_ANON_KEY = "（保留你原本的 anon key）";
 const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ===== 日期下拉初始化 ===== */
-function fillYear(id, allowEmpty) {
-  const sel = document.getElementById(id);
-  sel.innerHTML = allowEmpty ? `<option value="">年</option>` : `<option value="">年</option>`;
-  const now = new Date().getFullYear();
-  for (let y = now; y >= now - 10; y--) {
-    sel.innerHTML += `<option value="${y}">${y} 年</option>`;
-  }
+/* ===== 日期工具 ===== */
+function daysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
 }
-function fillMonth(id) {
-  const sel = document.getElementById(id);
-  sel.innerHTML = `<option value="">月</option>`;
-  for (let m = 1; m <= 12; m++) {
-    sel.innerHTML += `<option value="${m}">${m} 月</option>`;
-  }
-}
-function rebuildDays(y, m, d) {
-  const year = document.getElementById(y).value;
-  const month = document.getElementById(m).value;
-  const daySel = document.getElementById(d);
-  daySel.innerHTML = `<option value="">日</option>`;
-  if (!year || !month) return;
-  const max = new Date(year, month, 0).getDate();
+function rebuildDays(yearId, monthId, dayId) {
+  const y = document.getElementById(yearId).value;
+  const m = document.getElementById(monthId).value;
+  const d = document.getElementById(dayId);
+  d.innerHTML = `<option value="">日</option>`;
+  if (!y || !m) return;
+  const max = daysInMonth(y, m);
   for (let i = 1; i <= max; i++) {
-    daySel.innerHTML += `<option value="${i}">${i} 日</option>`;
+    d.innerHTML += `<option value="${i}">${i}</option>`;
   }
 }
 
-fillYear("checkup_year", false);
-fillMonth("checkup_month");
-fillYear("followup_year", true);
-fillMonth("followup_month");
-
+/* 綁定日期事件 */
 ["checkup_year","checkup_month"].forEach(id =>
   document.getElementById(id).addEventListener("change",
     () => rebuildDays("checkup_year","checkup_month","checkup_day"))
@@ -236,13 +218,13 @@ document.getElementById("health-form").addEventListener("submit", async e => {
   e.preventDefault();
   const msg = document.getElementById("message");
 
-  const cy = checkup_year.value, cm = checkup_month.value, cd = checkup_day.value;
-  const fy = followup_year.value, fm = followup_month.value, fd = followup_day.value;
+  const checkup_date =
+    `${checkup_year.value}-${String(checkup_month.value).padStart(2,"0")}-${String(checkup_day.value).padStart(2,"0")}`;
 
-  const checkup_date = `${cy}-${String(cm).padStart(2,"0")}-${String(cd).padStart(2,"0")}`;
-  const followup_date = (fy && fm && fd)
-    ? `${fy}-${String(fm).padStart(2,"0")}-${String(fd).padStart(2,"0")}`
-    : null;
+  const followup_date =
+    (followup_year.value && followup_month.value && followup_day.value)
+      ? `${followup_year.value}-${String(followup_month.value).padStart(2,"0")}-${String(followup_day.value).padStart(2,"0")}`
+      : null;
 
   const { error } = await supabase
     .from("health_records")
