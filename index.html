@@ -135,11 +135,10 @@
     </div>
 
     <label>體檢級數</label>
-    <select id="result_level" required>
-      <option value="">請選擇</option>
-      <option value="2">2 級</option>
-      <option value="3">3 級</option>
-    </select>
+<select id="result_level"> <option value="">尚未取得 / 未填</option>
+  <option value="2">2 級</option>
+  <option value="3">3 級</option>
+</select>
 
     <!-- 回診日期 -->
     <label>回診日期（年 / 月 / 日，可不填）</label>
@@ -180,109 +179,120 @@
     <div id="message"></div>
   </form>
 </div>
- <script>
-  // 1. 立即執行的報到機制 (檢查 JS 是否活著)
-  alert("JS 已啟動！正在初始化...");
-
-  // 定義全域變數
+<script>
+  // 1. 初始化全域變數
   var supabaseClient = null;
   var SUPABASE_URL = "https://pvmvcaelkizcbutykkwq.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2bXZjYWVsa2l6Y2J1dHlra3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODgzNTYsImV4cCI6MjA4NDQ2NDM1Nn0.nmGwM6UroI4mZEMy7UaQWkRRZo4SoNRAlcYJf0BYrRo";
 
-  // 確保 Supabase 載入
-  function initSupabase() {
+  // 日期計算函式
+  function daysInMonth(year, month) {
+    return new Date(year, month, 0).getDate();
+  }
+
+  function rebuildDays(yearId, monthId, dayId) {
+    var yEl = document.getElementById(yearId);
+    var mEl = document.getElementById(monthId);
+    var dEl = document.getElementById(dayId);
+    if (!yEl || !mEl || !dEl) return;
+    var yy = parseInt(yEl.value, 10);
+    var mm = parseInt(mEl.value, 10);
+    dEl.innerHTML = '<option value="">日</option>';
+    if (!yy || !mm) return;
+    var max = daysInMonth(yy, mm);
+    for (var i = 1; i <= max; i++) {
+      var opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = String(i);
+      dEl.appendChild(opt);
+    }
+  }
+
+  // 2. 頁面載入後執行主邏輯
+  window.onload = function() {
+    // 初始化日期連動事件
+    var ids = [["checkup_year", "checkup_month", "checkup_day"], ["followup_year", "followup_month", "followup_day"]];
+    ids.forEach(function(group) {
+      var y = document.getElementById(group[0]);
+      var m = document.getElementById(group[1]);
+      if (y) y.onchange = function() { rebuildDays(group[0], group[1], group[2]); };
+      if (m) m.onchange = function() { rebuildDays(group[0], group[1], group[2]); };
+    });
+
+    // 初始化 Supabase
     try {
       if (typeof window.supabase !== 'undefined') {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log("Supabase 連線成功");
       } else {
         alert("錯誤：Supabase SDK 未成功載入！");
       }
     } catch (e) {
       alert("初始化異常：" + e.message);
     }
-  }
 
-  // 日期邏輯 (極簡版)
-  function setupDateEvents() {
-    var ids = ["checkup_year", "checkup_month", "followup_year", "followup_month"];
-    for (var i = 0; i < ids.length; i++) {
-      var el = document.getElementById(ids[i]);
-      if (el) {
-        el.onchange = function() {
-          var prefix = this.id.split('_')[0]; // checkup 或 followup
-          rebuildDays(prefix + "_year", prefix + "_month", prefix + "_day");
-        };
-      }
-    }
-  }
-
-  function rebuildDays(yId, mId, dId) {
-    var yy = parseInt(document.getElementById(yId).value);
-    var mm = parseInt(document.getElementById(mId).value);
-    var dEl = document.getElementById(dId);
-    if (!yy || !mm || !dEl) return;
-    var max = new Date(yy, mm, 0).getDate();
-    dEl.innerHTML = '<option value="">日</option>';
-    for (var i = 1; i <= max; i++) {
-      var opt = document.createElement("option");
-      opt.value = i; opt.text = i;
-      dEl.appendChild(opt);
-    }
-  }
-
-  // 核心送出邏輯
-  window.onload = function() {
-    initSupabase();
-    setupDateEvents();
-
+    // 3. 核心送出邏輯
     var form = document.getElementById("health-form");
-    form.onsubmit = async function(e) {
-      e.preventDefault();
-      alert("按鈕已按下，開始處理資料...");
+    if (form) {
+      form.onsubmit = async function(e) {
+        e.preventDefault();
 
-      try {
-        var nameVal = document.getElementById("name").value.trim();
-        var unitVal = document.getElementById("unit").value;
-        var lvVal = document.getElementById("result_level").value;
+        try {
+          // 抓取欄位
+          var nameEl = document.getElementById("name");
+          var unitEl = document.getElementById("unit");
+          var birthEl = document.getElementById("birth_month");
+          var cyEl = document.getElementById("checkup_year");
+          var cmEl = document.getElementById("checkup_month");
+          var cdEl = document.getElementById("checkup_day");
+          var lvEl = document.getElementById("result_level");
 
-        if (!nameVal || !unitVal || !lvVal) {
-          alert("請檢查必填欄位 (姓名、單位、級數)");
-          return;
+          // 驗證必填
+          if (!nameEl.value.trim()) { alert("請輸入姓名"); return; }
+          if (!unitEl.value) { alert("請選擇單位"); return; }
+          if (!cyEl.value || !cmEl.value || !cdEl.value) { alert("請填寫完整體檢日期"); return; }
+
+          // 組合資料
+          var checkup_date = cyEl.value + "-" + cmEl.value.padStart(2, '0') + "-" + cdEl.value.padStart(2, '0');
+          
+          var fy = document.getElementById("followup_year").value;
+          var fm = document.getElementById("followup_month").value;
+          var fd = document.getElementById("followup_day").value;
+          var f_date = (fy && fm && fd) ? fy + "-" + fm.padStart(2, '0') + "-" + fd.padStart(2, '0') : null;
+
+          var payload = {
+            name: nameEl.value.trim(),
+            unit: unitEl.value,
+            birth_month: parseInt(birthEl.value, 10),
+            checkup_date: checkup_date,
+            result_level: lvEl.value ? parseInt(lvEl.value, 10) : null,
+            followup_date: f_date
+          };
+
+          // 送出按鈕狀態設定
+          var btn = form.querySelector("button");
+          btn.disabled = true;
+          btn.textContent = "傳送中...";
+
+          // 執行寫入
+          var res = await supabaseClient.from("health_records").upsert([payload], { onConflict: 'name' });
+
+          if (res.error) {
+            alert("失敗：" + res.error.message);
+          } else {
+            alert("✅ 送出成功！");
+            form.reset();
+            document.getElementById("checkup_day").innerHTML = '<option value="">日</option>';
+            document.getElementById("followup_day").innerHTML = '<option value="">日</option>';
+          }
+        } catch (err) {
+          alert("程式執行錯誤：" + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "送出";
         }
-
-        var payload = {
-          name: nameVal,
-          unit: unitVal,
-          birth_month: parseInt(document.getElementById("birth_month").value),
-          checkup_date: document.getElementById("checkup_year").value + "-" + document.getElementById("checkup_month").value.padStart(2, '0') + "-" + document.getElementById("checkup_day").value.padStart(2, '0'),
-          result_level: parseInt(lvVal),
-          followup_date: null
-        };
-
-        // 處理回診日期
-        var fy = document.getElementById("followup_year").value;
-        var fm = document.getElementById("followup_month").value;
-        var fd = document.getElementById("followup_day").value;
-        if (fy && fm && fd) {
-          payload.followup_date = fy + "-" + fm.padStart(2, '0') + "-" + fd.padStart(2, '0');
-        }
-
-        alert("準備寫入資料庫...");
-
-        var res = await supabaseClient.from("health_records").upsert([payload], { onConflict: 'name' });
-
-        if (res.error) {
-          alert("失敗：" + res.error.message);
-        } else {
-          alert("✅ 送出成功！");
-          form.reset();
-        }
-      } catch (err) {
-        alert("程式執行錯誤：" + err.message);
-      }
-    };
-  };
+      }; // 結束 onsubmit
+    }
+  }; // 結束 onload
 </script>
 </body>
 </html>
