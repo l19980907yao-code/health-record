@@ -70,24 +70,28 @@
   <form id="health-form">
 
     <label>姓名</label>
-    <input id="name" required>
+<p class="hint" style="color: #d63031; margin-bottom: 5px;">
+  <i class="fas fa-exclamation-circle"></i> 預防姓名相同者被洗掉，請填<strong>舷號＋姓名（登大則加登大，艦隊部則加151）</strong>。<br>
+  （如：530姚皓倫,登大郭昱辰,151蘇瑾瑄）
+</p>
+<input id="name" placeholder="請填寫 舷號+姓名" required>
 
     <label>單位</label>
     <select id="unit" required>
       <option value="">請選擇</option>
-      <option>艦隊部</option>
-      <option>武夷軍艦</option>
-      <option>玉山軍艦</option>
-      <option>旭海軍艦</option>
-      <option>磐石軍艦</option>
-      <option>中和軍艦</option>
-      <option>中平軍艦</option>
-      <option>中業軍艦</option>
-      <option>中建軍艦</option>
-      <option>中啟軍艦</option>
-      <option>中明軍艦</option>
+      <option>151艦隊部</option>
+      <option>530武夷軍艦</option>
+      <option>1401玉山軍艦</option>
+      <option>193旭海軍艦</option>
+      <option>532磐石軍艦</option>
+      <option>232中和軍艦</option>
+      <option>233中平軍艦</option>
+      <option>231中業軍艦</option>
+      <option>205中建軍艦</option>
+      <option>218中啟軍艦</option>
+      <option>227中明軍艦</option>
       <option>登陸艇大隊</option>
-      <option>高雄軍艦</option>
+      <option>LCC高雄軍艦</option>
     </select>
 
     <label>出生月份</label>
@@ -182,12 +186,10 @@
   </form>
 </div>
 <script>
-  // 1. 初始化全域變數
   var supabaseClient = null;
   var SUPABASE_URL = "https://pvmvcaelkizcbutykkwq.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2bXZjYWVsa2l6Y2J1dHlra3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4ODgzNTYsImV4cCI6MjA4NDQ2NDM1Nn0.nmGwM6UroI4mZEMy7UaQWkRRZo4SoNRAlcYJf0BYrRo";
 
-  // 日期計算函式
   function daysInMonth(year, month) {
     return new Date(year, month, 0).getDate();
   }
@@ -210,36 +212,32 @@
     }
   }
 
-  // 2. 頁面載入後執行主邏輯
   window.onload = function() {
-    // 初始化日期連動事件
-    var ids = [["checkup_year", "checkup_month", "checkup_day"], ["followup_year", "followup_month", "followup_day"]];
-    ids.forEach(function(group) {
-      var y = document.getElementById(group[0]);
-      var m = document.getElementById(group[1]);
-      if (y) y.onchange = function() { rebuildDays(group[0], group[1], group[2]); };
-      if (m) m.onchange = function() { rebuildDays(group[0], group[1], group[2]); };
+    // 初始化日期連動
+    var dateGroups = [["checkup_year", "checkup_month", "checkup_day"], ["followup_year", "followup_month", "followup_day"]];
+    dateGroups.forEach(function(g) {
+      var y = document.getElementById(g[0]);
+      var m = document.getElementById(g[1]);
+      if (y) y.onchange = function() { rebuildDays(g[0], g[1], g[2]); };
+      if (m) m.onchange = function() { rebuildDays(g[0], g[1], g[2]); };
     });
 
-    // 初始化 Supabase
     try {
       if (typeof window.supabase !== 'undefined') {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       } else {
-        alert("錯誤：Supabase SDK 未成功載入！");
+        alert("錯誤：Supabase SDK 未載入！");
       }
     } catch (e) {
       alert("初始化異常：" + e.message);
     }
 
-    // 3. 核心送出邏輯
     var form = document.getElementById("health-form");
     if (form) {
       form.onsubmit = async function(e) {
         e.preventDefault();
 
         try {
-          // 抓取欄位
           var nameEl = document.getElementById("name");
           var unitEl = document.getElementById("unit");
           var birthEl = document.getElementById("birth_month");
@@ -248,12 +246,10 @@
           var cdEl = document.getElementById("checkup_day");
           var lvEl = document.getElementById("result_level");
 
-          // 驗證必填
-          if (!nameEl.value.trim()) { alert("請輸入姓名"); return; }
+          if (!nameEl.value.trim()) { alert("請輸入姓名（含舷號）"); return; }
           if (!unitEl.value) { alert("請選擇單位"); return; }
           if (!cyEl.value || !cmEl.value || !cdEl.value) { alert("請填寫完整體檢日期"); return; }
 
-          // 組合資料
           var checkup_date = cyEl.value + "-" + cmEl.value.padStart(2, '0') + "-" + cdEl.value.padStart(2, '0');
           
           var fy = document.getElementById("followup_year").value;
@@ -270,12 +266,10 @@
             followup_date: f_date
           };
 
-          // 送出按鈕狀態設定
           var btn = form.querySelector("button");
           btn.disabled = true;
           btn.textContent = "傳送中...";
 
-          // 執行寫入
           var res = await supabaseClient.from("health_records").upsert([payload], { onConflict: 'name' });
 
           if (res.error) {
@@ -292,9 +286,9 @@
           btn.disabled = false;
           btn.textContent = "送出";
         }
-      }; // 結束 onsubmit
+      };
     }
-  }; // 結束 onload
+  };
 </script>
 </body>
 </html>
