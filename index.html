@@ -65,7 +65,7 @@
 <body>
 <div class="card">
   <h2>體檢回診管理</h2>
-  <p class="hint">請完整填寫以下資料，回診日期可留空。</p>
+  <p class="hint">因應新年度司令部對於體檢的新政策，於每月「第一週」、「第三週」都要回報體檢資料，請艦隊部及各屬艦人員幫忙填寫以下資料，級數及回診日期可留空，待確切級數及回診時間填寫。</p>
 
   <form id="health-form">
 
@@ -281,7 +281,7 @@
           if (res.error) {
             alert("失敗：" + res.error.message);
           } else {
-            alert("✅ 送出成功！");
+            alert("✅ 送出成功！151醫官及醫班深深感謝您！");
             form.reset();
             document.getElementById("checkup_day").innerHTML = '<option value="">日</option>';
             document.getElementById("followup_day").innerHTML = '<option value="">日</option>';
